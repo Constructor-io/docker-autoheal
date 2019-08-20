@@ -24,7 +24,7 @@ if [ "$1" = 'healthcheck' ]; then
 fi
 
 if [ "$1" = 'autoheal' ] && [ -e ${DOCKER_SOCK} ]; then
-  
+
   # https://docs.docker.com/engine/api/v1.25/
 
   # Set container selector
@@ -40,7 +40,7 @@ if [ "$1" = 'autoheal' ] && [ -e ${DOCKER_SOCK} ]; then
 
   while true; do
     sleep ${AUTOHEAL_INTERVAL:=5}
-    
+
     apiUrl="http://localhost/containers/json?filters=\{\"health\":\[\"unhealthy\"\]${labelFilter}\}"
     stopTimeout=".Labels[\"autoheal.stop.timeout\"] // ${AUTOHEAL_DEFAULT_STOP_TIMEOUT:-10}"
     docker_curl "$apiUrl" | \
@@ -49,11 +49,11 @@ if [ "$1" = 'autoheal' ] && [ -e ${DOCKER_SOCK} ]; then
         CONTAINER_SHORT_ID=${CONTAINER_ID:0:12}
         DATE=$(date +%d-%m-%Y" "%H:%M:%S)
         if [ "null" = "$CONTAINER_NAME" ]; then
-          echo "$DATE Container name of ($CONTAINER_SHORT_ID) is null, which implies container does not exist - don't restart"
+          echo "$DATE Container name of ($CONTAINER_SHORT_ID) is null, which implies container does not exist - don't stop"
         else
-          echo "$DATE Container ${CONTAINER_NAME} ($CONTAINER_SHORT_ID) found to be unhealthy - Restarting container now with ${TIMEOUT}s timeout"
+          echo "$DATE Container ${CONTAINER_NAME} ($CONTAINER_SHORT_ID) found to be unhealthy - Stopping container now with ${TIMEOUT}s timeout"
           docker_curl -f -XPOST "http://localhost/containers/${CONTAINER_ID}/stop?t=${TIMEOUT}" \
-            || echo "$DATE Restarting container $CONTAINER_SHORT_ID failed"
+            || echo "$DATE Stopping container $CONTAINER_SHORT_ID failed"
         fi
     done
   done
